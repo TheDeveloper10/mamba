@@ -3,24 +3,93 @@ package mamba
 import (
 	"reflect"
 	"testing"
+	"time"
 )
 
 func TestTokenDecode(t *testing.T) {
-	t.Run("Same encoding template and decoding template", func(t2 *testing.T) {
+	decodeTokenNow = func() time.Time { return time.Now().Add(60 * time.Second) }
+	defer func() { decodeTokenNow = time.Now }()
+
+	s := func(str string) *string { return &str }
+	
+	t.Run("parameter test", func(t2 *testing.T) {
+		template := TokenTemplate{
+			ExpiryTime: 75,
+			SigningKey: "b",
+		}
+
+		token, _ := NewToken[string](&template, s("a"))
+		_, err := DecodeToken[string](nil, token)
+		if err == nil {
+			t2.Errorf("expected error but got none")
+		}
+
+		_, err = DecodeToken[string](nil, nil)
+		if err == nil {
+			t2.Errorf("expected error but got none")
+		}
+
+		_, err = DecodeToken[string](&template, nil)
+		if err == nil {
+			t2.Errorf("expected error but got none")
+		}
+	})
+
+	t.Run("dummy test", func(t2 *testing.T) {
+		template := TokenTemplate{
+			ExpiryTime: 75,
+			SigningKey: "b",
+		}
+		exmToken := ""
+
+		_, err := DecodeToken[string](&template, &exmToken)
+		if err == nil {
+			t2.Errorf("expected error but got none")
+		}
+	})
+
+	t.Run("decoding an expired token", func(t2 *testing.T) {
+		template := TokenTemplate{
+			ExpiryTime: 1,
+			SigningKey: "a",
+		}
+
+		token, _ := NewToken[string](&template, s("a"))
+		_, err := DecodeToken[string](&template, token)
+		if err == nil {
+			t2.Errorf("expected error but got none")
+		}
+
+		template.ExpiryTime = 10
+
+		token, _ = NewToken[string](&template, s("a"))
+		_, err = DecodeToken[string](&template, token)
+		if err == nil {
+			t2.Errorf("expected error but got none")
+		}
+
+		template.ExpiryTime = 100
+
+		token, _ = NewToken[string](&template, s("a"))
+		_, err = DecodeToken[string](&template, token)
+		if err != nil {
+			t2.Errorf("unexpected error: %e", err)
+		}
+	})
+
+	t.Run("same encoding and decoding template", func(t2 *testing.T) {
 		template1 := TokenTemplate{
-			ExpiryTime: 10,
+			ExpiryTime: 70,
 			SigningKey: "a",
 		}
 		template2 := TokenTemplate{
-			ExpiryTime: 10,
+			ExpiryTime: 70,
 			SigningKey: "b",
 		}
 		template3 := TokenTemplate{
-			ExpiryTime: 10,
+			ExpiryTime: 70,
 			SigningKey: "bcdef",
 		}
-
-		s := func(str string) *string { return &str }
 
 		token, _ := NewToken[string](&template1, s("a"))
 		body, err := DecodeToken[string](&template1, token)
@@ -49,8 +118,23 @@ func TestTokenDecode(t *testing.T) {
 			t2.Errorf("incorrect body - expected: %v but got: %v", exmBody, body2)
 		}
 	})
-	//token, _ := NewToken(&template1, "a")
-	//DecodeToken(template1, tokens)
+
+	t.Run("different encoding and decoding template", func(t2 *testing.T) {
+		template1 := TokenTemplate{
+			ExpiryTime: 70,
+			SigningKey: "a",
+		}
+		template2 := TokenTemplate{
+			ExpiryTime: 75,
+			SigningKey: "b",
+		}
+
+		token, _ := NewToken[string](&template1, s("a"))
+		_, err := DecodeToken[string](&template2, token)
+		if err == nil {
+			t2.Errorf("expected error when decoding with a different template")
+		}
+	})
 }
 
 type testStruct struct {

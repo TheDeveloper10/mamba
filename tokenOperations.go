@@ -7,6 +7,16 @@ import (
 	"github.com/golang-jwt/jwt/v4"
 )
 
+
+// the only reason for these to exist is testing
+var (
+	newTokenNow    = time.Now
+	decodeTokenNow = time.Now
+)
+
+/*
+Generate a new JWT with a `body` from `template`
+*/
 func NewToken[T any](template *TokenTemplate, body *T) (*string, error) {
 	if template == nil {
 		return nil, errors.New("no template provided")
@@ -20,7 +30,7 @@ func NewToken[T any](template *TokenTemplate, body *T) (*string, error) {
 	}
 
 	if template.ExpiryTime > 0 {
-		claims.RegisteredClaims.ExpiresAt = jwt.NewNumericDate(time.Now().Add(time.Second * time.Duration(template.ExpiryTime)))
+		claims.RegisteredClaims.ExpiresAt = jwt.NewNumericDate(newTokenNow().Add(time.Second * time.Duration(template.ExpiryTime)))
 	}
 
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
@@ -33,15 +43,23 @@ func NewToken[T any](template *TokenTemplate, body *T) (*string, error) {
 	return &tokenString, nil
 }
 
-func IsTokenValid[T any](template *TokenTemplate, tokenString *string) bool {
-	if tokenString == nil {
-		return false
+/*
+Check whether a JWT (`tokenString`) is valid based on `template`
+*/
+func IsTokenValid[T any](template *TokenTemplate, tokenString *string) (bool, error) {
+	if template == nil {
+		return false, errors.New("no template provided")
+	} else if tokenString == nil {
+		return false, errors.New("no token provided")
 	}
 
 	_, err := DecodeToken[T](template, tokenString)
-	return err != nil
+	return err != nil, err
 }
 
+/*
+Decode a JWT (`tokenString`) based on `template`
+*/
 func DecodeToken[T any](template *TokenTemplate, tokenString *string) (*T, error) {
 	if template == nil {
 		return nil, errors.New("no template provided")
@@ -67,13 +85,15 @@ func DecodeToken[T any](template *TokenTemplate, tokenString *string) (*T, error
 			return nil, errors.New("invalid token claims")
 		}
 
-		// claims.ExpiresAt
-		// exp, ok := claims["exp"].(int64)
-		// if ok {
-		// 	if exp <= time.Now().Unix() {
-		// 		return nil, errors.New("expired token")
-		// 	}
-		// }
+		if claims.ExpiresAt == nil {
+			if template.ExpiryTime != -1 {
+				return nil, errors.New("expired token")
+			}
+		} else {
+			if template.ExpiryTime != -1 && !claims.VerifyExpiresAt(decodeTokenNow(), true) {
+				return nil, errors.New("expired token")
+			}
+		}
 
 		return &claims.Body, nil
 	} else {

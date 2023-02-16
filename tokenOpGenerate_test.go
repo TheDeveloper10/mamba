@@ -26,6 +26,8 @@ func TestTokenGeneration(t *testing.T) {
 		SigningKey: "",
 	}
 
+	tokenGenerationTest(t, nil, 2, true)
+
 	tokenGenerationTest(t, &template1, "", false)
 	tokenGenerationTest(t, &template1, "abc", false)
 	tokenGenerationTest(t, &template1, "{\"a\":123}", false)
@@ -58,15 +60,15 @@ func tokenGenerationTest[T any](t *testing.T, template *TokenTemplate, body T, s
 
 	if shouldError {
 		if err == nil || token != nil {
-			t.Errorf("Error expected")
+			t.Errorf("error expected")
 		}
 	} else {
 		if err != nil {
-			t.Errorf("Unexpected error: %e", err)
+			t.Errorf("unexpected error: %e", err)
 		} else if token == nil {
-			t.Error("Token is nil")
+			t.Error("token is nil")
 		} else if len(*token) == 0 {
-			t.Error("Token is empty")
+			t.Error("token is empty")
 		}
 	}
 }
