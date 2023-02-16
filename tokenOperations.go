@@ -6,15 +6,26 @@ import (
 	"time"
 )
 
-func NewToken(template *TokenTemplate, body string) (*string, error) {
-	token := jwt.New(jwt.SigningMethodHS256)
-
-	claims := token.Claims.(jwt.MapClaims)
-
-	claims["body"] = body
-	if template.ExpiryTime > 0 {
-		claims["exp"] = time.Now().Add(time.Second * time.Duration(template.ExpiryTime)).Unix()
+func NewToken(template *TokenTemplate, body interface{}) (*string, error) {
+	if template.SecretKey == "" {
+		return nil, errors.New("secret must be a string of at least 1 character")
 	}
+
+	var claims tokenClaims
+	if template.ExpiryTime > 0 {
+		claims = tokenClaims{
+			RegisteredClaims: jwt.RegisteredClaims{
+				ExpiresAt: jwt.NewNumericDate(time.Now().Add(time.Second * time.Duration(template.ExpiryTime))),
+			},
+		}
+	} else {
+		claims = tokenClaims{
+			RegisteredClaims: jwt.RegisteredClaims{},
+		}
+	}
+	claims.Body = body
+
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
 
 	tokenString, err := token.SignedString([]byte(template.SecretKey))
 	if err != nil {
@@ -33,7 +44,7 @@ func IsTokenValid(template *TokenTemplate, tokenString *string) bool {
 	return err != nil
 }
 
-func DecodeToken(template *TokenTemplate, tokenString *string) (*string, error) {
+func DecodeToken(template *TokenTemplate, tokenString *string) (interface{}, error) {
 	if tokenString == nil {
 		return nil, errors.New("no token provided")
 	}
@@ -64,9 +75,9 @@ func DecodeToken(template *TokenTemplate, tokenString *string) (*string, error) 
 		}
 
 
-		body, ok := claims["body"].(string)
+		body, ok := claims["body"]
 		if ok {
-			return &body, nil
+			return body, nil
 		} else {
 			return nil, nil
 		}
