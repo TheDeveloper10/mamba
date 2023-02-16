@@ -8,4 +8,8 @@ type TokenTemplate struct {
 	// key that is used for signing the token
 	// *required
 	SigningKey string
+
+	// key that is used for encrypting the token after signing
+	// optional
+	EncryptionKey string
 }
