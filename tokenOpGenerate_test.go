@@ -7,23 +7,23 @@ import (
 func TestTokenGeneration(t *testing.T) {
 	template1 := TokenTemplate{
 		ExpiryTime: 10,
-		SecretKey:  "abcdefghij",
+		SigningKey:  "abcdefghij",
 	}
 	template2 := TokenTemplate{
 		ExpiryTime: 5,
-		SecretKey: "a",
+		SigningKey: "a",
 	}
 	template3 := TokenTemplate{
 		ExpiryTime: 0,
-		SecretKey: "c",
+		SigningKey: "c",
 	}
 	template4 := TokenTemplate{
 		ExpiryTime: -1,
-		SecretKey: "b",
+		SigningKey: "b",
 	}
 	template5 := TokenTemplate{
 		ExpiryTime: -1,
-		SecretKey: "",
+		SigningKey: "",
 	}
 
 	tokenGenerationTest(t, &template1, "", false)
@@ -53,8 +53,8 @@ func TestTokenGeneration(t *testing.T) {
 
 }
 
-func tokenGenerationTest(t *testing.T, template *TokenTemplate, body interface{}, shouldError bool) {
-	token, err := NewToken(template, body)
+func tokenGenerationTest[T any](t *testing.T, template *TokenTemplate, body T, shouldError bool) {
+	token, err := NewToken(template, &body)
 
 	if shouldError {
 		if err == nil || token != nil {

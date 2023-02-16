@@ -2,7 +2,7 @@ package mamba
 
 import "github.com/golang-jwt/jwt/v4"
 
-type tokenClaims struct {
+type tokenClaims[T any] struct {
 	jwt.RegisteredClaims
-	Body interface{} `json:"body"`
+	Body T `json:"body"`
 }

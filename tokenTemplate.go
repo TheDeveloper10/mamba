@@ -6,5 +6,5 @@ type TokenTemplate struct {
 	ExpiryTime int32
 
 	// key that is used for signing the token
-	SecretKey string
+	SigningKey string
 }
