@@ -10,7 +10,7 @@ import (
 	"io"
 )
 
-func encryptTokenInternal(plainToken []byte, key []byte) (*string, error) {
+func encryptInternal(plainToken []byte, key []byte) (*string, error) {
     block, err := aes.NewCipher(key)
     if err != nil {
         return nil, errors.New("failed to create cipher; probably invalid length")

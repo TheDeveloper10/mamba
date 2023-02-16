@@ -7,7 +7,7 @@ import (
 	"errors"
 )
 
-func decryptTokenInternal(encryptedToken *string, key []byte) (*string, error) {
+func decryptInternal(encryptedToken *string, key []byte) (*string, error) {
     block, err := aes.NewCipher(key)
     if err != nil {
         return nil, errors.New("failed to create cipher")

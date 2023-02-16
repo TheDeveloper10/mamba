@@ -48,7 +48,39 @@ func TestTokenDecode(t *testing.T) {
 		}
 	})
 
-	// t.Run("decoding an encrypted token", func)
+	t.Run("decoding an encrypted token", func(t2 *testing.T) {
+		template1 := TokenTemplate{
+			ExpiryTime: 75,
+			SigningKey: "1234567890123456",
+		}
+		template2 := TokenTemplate{
+			ExpiryTime: 75,
+			SigningKey: "1234567890123457",
+		}
+
+		performTests := func() {
+			token, _ := NewToken[string](&template1, s("a"))
+			_, err := DecodeToken[string](&template1, token)
+			if err != nil {
+				t2.Errorf("unexpected error: %e", err)
+			}
+	
+			_, err = DecodeToken[string](&template2, token)
+			if err == nil {
+				t2.Errorf("expected error but got none")
+			}
+		}
+
+		performTests()
+
+		template1.SigningKey = "123456789012345678901234"
+		template2.SigningKey = "123456789012345678901235"
+		performTests()
+
+		template1.SigningKey = "12345678901234567890123456789012"
+		template2.SigningKey = "12345678901234567890123456789013"
+		performTests()
+	})
 
 	t.Run("decoding an expired token", func(t2 *testing.T) {
 		template := TokenTemplate{
