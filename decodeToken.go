@@ -15,7 +15,7 @@ func DecodeToken[T any](template *TokenTemplate, tokenString *string) (*T, error
 	}
 
 	if template.EncryptionKey != "" {
-		tmp, err := decryptTokenInternal(tokenString, &template.EncryptionKey)
+		tmp, err := decryptTokenInternal(tokenString, []byte(template.EncryptionKey))
 		if err != nil {
 			return nil, err
 		}

@@ -5,70 +5,60 @@ import (
 )
 
 func TestTokenGeneration(t *testing.T) {
-	template1 := TokenTemplate{
-		ExpiryTime: 10,
-		SigningKey:  "abcdefghij",
-	}
-	template2 := TokenTemplate{
-		ExpiryTime: 5,
-		SigningKey: "a",
-	}
-	template3 := TokenTemplate{
-		ExpiryTime: 0,
-		SigningKey: "c",
-	}
-	template4 := TokenTemplate{
-		ExpiryTime: -1,
-		SigningKey: "b",
-	}
-	template5 := TokenTemplate{
-		ExpiryTime: -1,
-		SigningKey: "",
+	type tempTemplate struct {
+		TokenTemplate
+		shouldError bool
 	}
 
-	tokenGenerationTest(t, nil, 2, true)
+	templates := []tempTemplate{
+		{shouldError: false, TokenTemplate: TokenTemplate{ExpiryTime: 10, SigningKey: "abcdefghij"}},
+		{shouldError: false, TokenTemplate: TokenTemplate{ExpiryTime: 5, SigningKey: "a"}},
+		{shouldError: false, TokenTemplate: TokenTemplate{ExpiryTime: 0, SigningKey: "c"}},
+		{shouldError: false, TokenTemplate: TokenTemplate{ExpiryTime: -1, SigningKey: "b"}},
+		{shouldError: true, TokenTemplate: TokenTemplate{ExpiryTime: -1, SigningKey: ""}},
+		{shouldError: false, TokenTemplate: TokenTemplate{ExpiryTime: 10, SigningKey: "abcd"}},
+		{shouldError: false, TokenTemplate: TokenTemplate{ExpiryTime: -1, SigningKey: "abcd"}},
+		{shouldError: true, TokenTemplate: TokenTemplate{ExpiryTime: 10, SigningKey: "abcd", EncryptionKey: "1234"}},
+		{shouldError: true, TokenTemplate: TokenTemplate{ExpiryTime: -1, SigningKey: "abcd", EncryptionKey: "1234"}},
+		{shouldError: true, TokenTemplate: TokenTemplate{ExpiryTime: 100, SigningKey: "abcd", EncryptionKey: "01234567890123456"}},
+		{shouldError: false, TokenTemplate: TokenTemplate{ExpiryTime: 100, SigningKey: "abcd", EncryptionKey: "1234567890123456"}},
+		{shouldError: false, TokenTemplate: TokenTemplate{ExpiryTime: 10, SigningKey: "abcd", EncryptionKey: "1234567890123456"}},
+		{shouldError: false, TokenTemplate: TokenTemplate{ExpiryTime: -1, SigningKey: "abcd", EncryptionKey: "1234567890123456"}},
+		{shouldError: true, TokenTemplate: TokenTemplate{ExpiryTime: 100, SigningKey: "abcd", EncryptionKey: "0123456789012345678901234"}},
+		{shouldError: false, TokenTemplate: TokenTemplate{ExpiryTime: 100, SigningKey: "abcd", EncryptionKey: "123456789012345678901234"}},
+		{shouldError: false, TokenTemplate: TokenTemplate{ExpiryTime: 10, SigningKey: "abcd", EncryptionKey: "123456789012345678901234"}},
+		{shouldError: false, TokenTemplate: TokenTemplate{ExpiryTime: -1, SigningKey: "abcd", EncryptionKey: "123456789012345678901234"}},
+		{shouldError: true, TokenTemplate: TokenTemplate{ExpiryTime: 100, SigningKey: "abcd", EncryptionKey: "012345678901234567890123456789012"}},
+		{shouldError: false, TokenTemplate: TokenTemplate{ExpiryTime: 100, SigningKey: "abcd", EncryptionKey: "12345678901234567890123456789012"}},
+		{shouldError: false, TokenTemplate: TokenTemplate{ExpiryTime: 10, SigningKey: "abcd", EncryptionKey: "12345678901234567890123456789012"}},
+		{shouldError: false, TokenTemplate: TokenTemplate{ExpiryTime: -1, SigningKey: "abcd", EncryptionKey: "12345678901234567890123456789012"}},
+	}
 
-	tokenGenerationTest(t, &template1, "", false)
-	tokenGenerationTest(t, &template1, "abc", false)
-	tokenGenerationTest(t, &template1, "{\"a\":123}", false)
-	tokenGenerationTest(t, &template1, 2, false)
+	tokenGenerationTest(t, 0, nil, 2, true)
 
-	tokenGenerationTest(t, &template2, "", false)
-	tokenGenerationTest(t, &template2, "abc", false)
-	tokenGenerationTest(t, &template2, "{\"a\":123}", false)
-	tokenGenerationTest(t, &template2, 2, false)
-
-	tokenGenerationTest(t, &template3, "", false)
-	tokenGenerationTest(t, &template3, "abc", false)
-	tokenGenerationTest(t, &template3, "{\"a\":123}", false)
-	tokenGenerationTest(t, &template3, 2, false)
-
-	tokenGenerationTest(t, &template4, "", false)
-	tokenGenerationTest(t, &template4, "abc", false)
-	tokenGenerationTest(t, &template4, "{\"a\":123}", false)
-	tokenGenerationTest(t, &template4, 2, false)
-
-	tokenGenerationTest(t, &template5, "", true)
-	tokenGenerationTest(t, &template5, "abc", true)
-	tokenGenerationTest(t, &template5, "{\"a\":123}", true)
-	tokenGenerationTest(t, &template5, 2, true)
-
+	for id, template := range templates {
+		tokenGenerationTest(t, id, &template.TokenTemplate, "", template.shouldError)
+		tokenGenerationTest(t, id, &template.TokenTemplate, "abc", template.shouldError)
+		tokenGenerationTest(t, id, &template.TokenTemplate, "{\"a\":123}", template.shouldError)
+		tokenGenerationTest(t, id, &template.TokenTemplate, 2, template.shouldError)
+	}
 }
 
-func tokenGenerationTest[T any](t *testing.T, template *TokenTemplate, body T, shouldError bool) {
+func tokenGenerationTest[T any](t *testing.T, id int, template *TokenTemplate, body T, shouldError bool) {
+	id++
 	token, err := NewToken(template, &body)
 
 	if shouldError {
 		if err == nil || token != nil {
-			t.Errorf("error expected")
+			t.Errorf("%d: error expected", id)
 		}
 	} else {
 		if err != nil {
-			t.Errorf("unexpected error: %e", err)
+			t.Errorf("%d: unexpected error: %e", id, err)
 		} else if token == nil {
-			t.Error("token is nil")
+			t.Errorf("%d: token is nil", id)
 		} else if len(*token) == 0 {
-			t.Error("token is empty")
+			t.Errorf("%d: token is empty", id)
 		}
 	}
 }

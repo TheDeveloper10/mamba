@@ -7,8 +7,8 @@ import (
 	"errors"
 )
 
-func decryptTokenInternal(encryptedToken *string, key *string) (*string, error) {
-    block, err := aes.NewCipher([]byte(*key))
+func decryptTokenInternal(encryptedToken *string, key []byte) (*string, error) {
+    block, err := aes.NewCipher(key)
     if err != nil {
         return nil, errors.New("failed to create cipher")
     }
@@ -20,7 +20,7 @@ func decryptTokenInternal(encryptedToken *string, key *string) (*string, error) 
 
     cipherBytes, err := hex.DecodeString(*encryptedToken)
     if err != nil {
-        return nil, errors.New("failed to decode string")
+        return nil, errors.New("failed to decode token")
     }
 
     nonceSize := gcm.NonceSize()

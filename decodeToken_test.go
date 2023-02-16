@@ -48,6 +48,8 @@ func TestTokenDecode(t *testing.T) {
 		}
 	})
 
+	// t.Run("decoding an encrypted token", func)
+
 	t.Run("decoding an expired token", func(t2 *testing.T) {
 		template := TokenTemplate{
 			ExpiryTime: 1,

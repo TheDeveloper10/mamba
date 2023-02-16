@@ -3,27 +3,31 @@ package mamba
 import (
 	"crypto/aes"
 	"crypto/cipher"
+	"crypto/rand"
 	"encoding/hex"
 	"errors"
+	"fmt"
+	"io"
 )
 
-func encryptTokenInternal(plainToken *string, key *string) (*string, error) {
-    block, err := aes.NewCipher([]byte(*key))
+func encryptTokenInternal(plainToken []byte, key []byte) (*string, error) {
+    block, err := aes.NewCipher(key)
     if err != nil {
-        return nil, errors.New("failed to create cipher")
+        return nil, errors.New("failed to create cipher; probably invalid length")
     }
 
     gcm, err := cipher.NewGCM(block)
     if err != nil {
+		fmt.Println(err.Error())
         return nil, errors.New("failed to encrypt token")
     }
 
     nonce := make([]byte, gcm.NonceSize())
-    if _, err = gcm.Open(nil, nonce, []byte(*plainToken), nil); err != nil {
-        return nil, errors.New("failed to encrypt token")
+    if _, err = io.ReadFull(rand.Reader, nonce); err != nil {
+		return nil, errors.New("failed to encrypt token")
     }
-
-    cipherTextHex := gcm.Seal(nonce, nonce, []byte(*plainToken), nil)
+	
+    cipherTextHex := gcm.Seal(nonce, nonce, plainToken, nil)
 	cipherText := hex.EncodeToString(cipherTextHex)
 
     return &cipherText, nil

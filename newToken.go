@@ -32,7 +32,7 @@ func NewToken[T any](template *TokenTemplate, body *T) (*string, error) {
 	}
 
 	if template.EncryptionKey != "" {
-		return encryptTokenInternal(&tokenString, &template.EncryptionKey)
+		return encryptTokenInternal([]byte(tokenString), []byte(template.EncryptionKey))
 	} else {
 		return &tokenString, nil
 	}

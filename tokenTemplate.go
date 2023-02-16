@@ -10,6 +10,7 @@ type TokenTemplate struct {
 	SigningKey string
 
 	// key that is used for encrypting the token after signing
+	// must be either 16, 24, 32 characters long!
 	// optional
 	EncryptionKey string
 }
