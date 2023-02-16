@@ -31,5 +31,9 @@ func NewToken[T any](template *TokenTemplate, body *T) (*string, error) {
 		return nil, errors.New("failed to sign token")
 	}
 
-	return &tokenString, nil
+	if template.EncryptionKey != "" {
+		return encryptTokenInternal(&tokenString, &template.EncryptionKey)
+	} else {
+		return &tokenString, nil
+	}
 }
