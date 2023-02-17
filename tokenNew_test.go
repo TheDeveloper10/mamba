@@ -34,7 +34,13 @@ func TestTokenGeneration(t *testing.T) {
 		{shouldError: false, TokenTemplate: TokenTemplate{ExpiryTime: -1, SigningKey: "abcd", EncryptionKey: "12345678901234567890123456789012"}},
 	}
 
-	tokenGenerationTest(t, 0, nil, 2, true)
+	
+	type testStruct2 struct {
+		A chan int
+	}
+	
+	tokenGenerationTest(t, -2, nil, 2, true)
+	tokenGenerationTest(t, -1, &TokenTemplate{ExpiryTime: 10, SigningKey: "abcdefghij"}, testStruct2{A: make(chan int)}, true)
 
 	for id, template := range templates {
 		tokenGenerationTest(t, id, &template.TokenTemplate, "", template.shouldError)
@@ -45,7 +51,6 @@ func TestTokenGeneration(t *testing.T) {
 }
 
 func tokenGenerationTest[T any](t *testing.T, id int, template *TokenTemplate, body T, shouldError bool) {
-	id++
 	token, err := NewToken(template, &body)
 
 	if shouldError {

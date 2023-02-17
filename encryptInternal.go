@@ -6,7 +6,6 @@ import (
 	"crypto/rand"
 	"encoding/hex"
 	"errors"
-	"fmt"
 	"io"
 )
 
@@ -18,7 +17,6 @@ func encryptInternal(plainToken []byte, key []byte) (*string, error) {
 
     gcm, err := cipher.NewGCM(block)
     if err != nil {
-		fmt.Println(err.Error())
         return nil, errors.New("failed to encrypt token")
     }
 

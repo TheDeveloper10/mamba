@@ -51,11 +51,13 @@ func TestTokenDecode(t *testing.T) {
 	t.Run("decoding an encrypted token", func(t2 *testing.T) {
 		template1 := TokenTemplate{
 			ExpiryTime: 75,
-			SigningKey: "1234567890123456",
+			SigningKey: "a",
+			EncryptionKey: "1234567890123456",
 		}
 		template2 := TokenTemplate{
 			ExpiryTime: 75,
-			SigningKey: "1234567890123457",
+			SigningKey: "a",
+			EncryptionKey: "1234567890123457",
 		}
 
 		performTests := func() {
@@ -73,12 +75,12 @@ func TestTokenDecode(t *testing.T) {
 
 		performTests()
 
-		template1.SigningKey = "123456789012345678901234"
-		template2.SigningKey = "123456789012345678901235"
+		template1.EncryptionKey = "123456789012345678901234"
+		template2.EncryptionKey = "123456789012345678901235"
 		performTests()
 
-		template1.SigningKey = "12345678901234567890123456789012"
-		template2.SigningKey = "12345678901234567890123456789013"
+		template1.EncryptionKey = "12345678901234567890123456789012"
+		template2.EncryptionKey = "12345678901234567890123456789013"
 		performTests()
 	})
 
@@ -167,6 +169,31 @@ func TestTokenDecode(t *testing.T) {
 		_, err := DecodeToken[string](&template2, token)
 		if err == nil {
 			t2.Errorf("expected error when decoding with a different template")
+		}
+	})
+
+	t.Run("incorrect tokens", func(t2 *testing.T) {
+		template := TokenTemplate{
+			ExpiryTime: 1,
+			SigningKey: "a",
+		}
+
+		token := "aa"
+		_, err := DecodeToken[string](&template, &token)
+		if err == nil {
+			t2.Errorf("expected error but got none")
+		}
+
+		token = "eyJhbGciOiJFUzUxMiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiYWRtaW4iOnRydWUsImlhdCI6MTUxNjIzOTAyMn0.AbVUinMiT3J_03je8WTOIl-VdggzvoFgnOsdouAs-DLOtQzau9valrq-S6pETyi9Q18HH-EuwX49Q7m3KC0GuNBJAc9Tksulgsdq8GqwIqZqDKmG7hNmDzaQG1Dpdezn2qzv-otf3ZZe-qNOXUMRImGekfQFIuH_MjD2e8RZyww6lbZk"
+		_, err = DecodeToken[string](&template, &token)
+		if err == nil {
+			t2.Errorf("expected error but got none")
+		}
+
+		token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJib2R5IjoiYWFhIn0.FykH134clxQV__pCPFn3JJydLs0DxpT7LopcxQp29-4"
+		_, err = DecodeToken[string](&template, &token)
+		if err == nil {
+			t2.Errorf("expected error but got none")
 		}
 	})
 }

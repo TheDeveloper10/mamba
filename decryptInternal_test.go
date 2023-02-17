@@ -18,8 +18,11 @@ func TestDecryptInternal(t *testing.T) {
 		{expectedError: false, plainToken: "ab", encKey: "1234567890123456"},
 		{expectedError: false, plainToken: "abc", encKey: "1234567890123456"},
 		{expectedError: false, plainToken: "abcd", encKey: "1234567890123456"},
+		{expectedError: false, plainToken: "a", encKey: "123456789012345678901234"},
+		{expectedError: false, plainToken: "a", encKey: "12345678901234567890123456789012"},
 
 		{expectedError: true, plainToken: "a", encKey: "1234567890123456", decKey: "1234567890123457"},
+		{expectedError: true, plainToken: "a", encKey: "1234567890123456", decKey: "12345678901234578"},
 		{expectedError: true, plainToken: "ab", encKey: "1234567890123456", decKey: "1234567890123457"},
 		{expectedError: true, plainToken: "abc", encKey: "1234567890123456", decKey: "1234567890123457"},
 		{expectedError: true, plainToken: "abcd", encKey: "1234567890123456", decKey: "1234567890123457"},
